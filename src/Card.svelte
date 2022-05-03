@@ -78,7 +78,7 @@
             <Button
                 label={ expanded ? $lang.lessButton : $lang.moreButton }
                 func={ () => expanded = !expanded }
-                expanded
+                {expanded}
             >
                 {#if expanded}
                     <MdRemove />
