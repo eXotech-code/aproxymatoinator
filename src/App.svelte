@@ -85,7 +85,7 @@
             ["Error: Symbol x is undefined or not a number", "SymUndef"]
         ]);
         eq: string;
-        stepList = [];
+        stepList: Step[] = [];
         equationList = [];
         chartDataset: vals[] = [];
         h = 0;
@@ -318,7 +318,6 @@
                         <div class="interaction">
                             {#if step.i}
                                 <button
-                                    id={step.i}
                                     class={ step.expanded(expandedSteps) ? "expanded" : "" }
                                     on:click={() => { expandedSteps = step.changeExpState(expandedSteps) }}
                                 >
