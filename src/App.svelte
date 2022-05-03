@@ -69,8 +69,8 @@
     <div>
         <Form bind:value={form} />
         <Preview equation={form.equation} />
-        <List h={form.stepSize} equation={form.equation} />
         <Chart />
+        <List h={form.stepSize} equation={form.equation} />
     </div>
 </main>
 
@@ -86,25 +86,50 @@
 
     :global(body) {
         background: var(--background-color);
-        padding: 0;
+        padding: 1rem;
     }
 
-    @media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
+    @media screen and (min-width: 1000px) {
+        main > div {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: max-content max-content 1fr;
+            grid-template-areas: 
+                "form preview"
+                "list chart"
+                "list .";
+        }
+    }
+
+    @media screen and (max-width: 1000px) {
+        main > div {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: max-content max-content 1fr;
+            grid-template-areas: 
+                "form preview"
+                "chart chart"
+                "list list";
+        }
+    }
+
+    @media screen and (max-width: 600px) {
+        main > div {
+            grid-template-columns: 1fr;
+            grid-template-rows: max-content max-content max-content 1fr;
+            grid-template-areas: 
+                "form"
+                "preview"
+                "chart"
+                "list";
+        }
+    }
 
     main {
         font-family: 'Roboto', sans-serif;
-		margin: 0 auto;
+		margin: none;
 	}
 
     main > div {
         display: grid;
-        padding: 1rem;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: max-content max-content 1fr;
         gap: 1rem;
     }
 </style>

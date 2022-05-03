@@ -25,10 +25,9 @@
         box-shadow: var(--shadow);
         padding: 1rem;
         border-radius: var(--border-radius);
-        grid-column-start: 1;
-        grid-row-start: 1;
         display: flex;
         flex-direction: column;
         gap: 1rem;
+        grid-area: form;
     }
 </style>

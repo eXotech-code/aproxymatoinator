@@ -65,8 +65,7 @@
         border-radius: var(--border-radius);
         box-shadow: var(--shadow);
         position: relative;
-        grid-column-start: 2;
-        grid-row-start: 2;
+        grid-area: chart;
     }
 
     .outer::before {

@@ -18,10 +18,9 @@
     div {
         box-shadow: var(--shadow);
         border-radius: 12px;
-        grid-column-start: 1;
-        grid-row-end: span 2;
         display: flex;
         height: fit-content;
         flex-direction: column;
+        grid-area: list;
     }
 </style>

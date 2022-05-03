@@ -91,6 +91,18 @@
 </div>
 
 <style>
+    @media screen and (min-width: 600px) {
+        .information > div {
+            flex-direction: row;
+        }
+    }
+
+    @media screen and (max-width: 600px) {
+        .information > div {
+            flex-direction: column;
+        }
+    }
+
     .card {
         background: var(--ui-color);
         min-width: 0;
@@ -119,12 +131,11 @@
     }
 
     .information {
-        width: 60%;
+        max-width: 40vw;
     }
 
     .information > div {
         display: flex;
-        flex-direction: row;
         justify-content: space-between;
         gap: 1rem;
         overflow-x: auto;
