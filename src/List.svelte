@@ -7,11 +7,14 @@
 
     export let h: number
     export let equation: string;
+    export let truncated: boolean;
 
+    let collapsedAmount = 11;
     let customSteps;
     let expanded = false;
     $: {
-        customSteps = $steps.slice(0, expanded ? $steps.length : 11);
+        customSteps = $steps.slice(0, expanded ? $steps.length : collapsedAmount);
+        console.log(customSteps);
     }
 </script>
 
@@ -21,19 +24,26 @@
             <Card {equation} {i}  x={step.x} />
         {/each}
     {/if}
-    <div>
-        <Button 
-            label={expanded ? $lang.collapseButton : $lang.expandButton}
-            func={() => expanded = !expanded}
-            {expanded}
-        >
-            {#if expanded}
-                <MdExpandLess />
-            {:else}
-                <MdExpandMore />
-            {/if}
-        </Button>
-    </div>
+    {#if truncated}
+        <div>
+            <p>{$lang.truncatedMessage}</p>
+        </div>
+    {/if}
+    {#if $steps.length > collapsedAmount}
+        <div>
+            <Button 
+                label={expanded ? $lang.collapseButton : $lang.expandButton}
+                func={() => expanded = !expanded}
+                {expanded}
+            >
+                {#if expanded}
+                    <MdExpandLess />
+                {:else}
+                    <MdExpandMore />
+                {/if}
+            </Button>
+        </div>
+    {/if}
 </div>
 
 <style>

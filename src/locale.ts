@@ -8,7 +8,11 @@ const locale = {
     moreButton: ["Pokaż więcej", "Show more"],
     lessButton: ["Pokaż mniej", "Show less"],
     expandButton: ["Rozwiń", "Expand"],
-    collapseButton: ["Zwiń", "Collapse"]
+    collapseButton: ["Zwiń", "Collapse"],
+    truncatedMessage: [
+        "Dane nie mogą być wyświetlone w pełni, ponieważ poza tym przedziałem funkcja przyjmuje wartości zbliżające się do ∞.",
+        "Data beyond this point cannot be computed because the value of this function approaches ∞."
+    ]
 }
 
 const addSecretMiau = () => {
@@ -33,6 +37,7 @@ export class Locale {
     lessButton: string;
     expandButton: string;
     collapseButton: string;
+    truncatedMessage: string;
 }
 
 export default Locale;

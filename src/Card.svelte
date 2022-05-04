@@ -14,6 +14,7 @@
     // Generates equations for a specified step and saves them into array for later use.
     // If an equation is already in list, it returns it.
     const genEquations = (i: number, expanded: boolean, steps: Step[]) => {
+        console.log(steps[i]);
         const eqY = ["y_{${i}} = ${yPrev} + ${h} \\cdot ${fPrev} = ${y}", "y_{${i}} = ${y}"];
         const eqF = ["f_{${i}} = f(${x}, ${y}) = ${eqSubs} = ${f}", "f_{${i}} = ${f}"];
         let resY: string, resF: string;
@@ -115,6 +116,10 @@
 
     .card:first-child {
         border-radius: 12px 12px 0 0;
+    }
+
+    .card:last-child {
+        border-radius: 0 0 12px 12px
     }
 
     .card:hover {

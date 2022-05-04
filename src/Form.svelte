@@ -13,10 +13,10 @@
 </script>
 
 <div>
-    <Input id="equation" bind:value={value.equation} label={$lang.equationLabel} />
-    <Input id="initial" bind:value={initial} label={$lang.initialLabel} />
-    <Input id="steps" bind:value={steps} label={$lang.stepsLabel}/>
-    <Input id="stepS" bind:value={stepSize} label={$lang.stepSizeLabel} />
+    <Input id="equation" bind:value={value.equation} label={$lang.equationLabel} invalid={value.equation === ""} />
+    <Input id="initial" bind:value={initial} label={$lang.initialLabel} invalid={isNaN(value.initial)} />
+    <Input id="steps" bind:value={steps} label={$lang.stepsLabel} invalid={isNaN(value.steps)} />
+    <Input id="stepS" bind:value={stepSize} label={$lang.stepSizeLabel} invalid={isNaN(value.stepSize)} />
 </div>
 
 <style>

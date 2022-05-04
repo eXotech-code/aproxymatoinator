@@ -20,6 +20,13 @@
                 x = parseFloat((h * i).toFixed(3));
                 // Calculate y_i
                 y = parseFloat((i === 0 ? initial : steps[i-1].y + h*steps[i-1].f).toFixed(3));
+
+                /* If computed y value exceeds biggest possible integers size
+                 * we will just stop the computation here and set the variable
+                 * that will show that fact on the list of values */
+                if (y >= Number.MAX_SAFE_INTEGER) {
+                    break;
+                }
                 
                 // Calculate f_i
                 f = fi({x: x, y: y, e: Math.E});
@@ -44,24 +51,34 @@
         stepSize: 0.01,
         equation: "y(1 - y)"
     }
+
+    $: invalid = Object.values(form).includes(NaN) || Object.values(form).includes("");
     
     let fi;
+    let truncated = false;
     $: {
-        // Prepare the function beforehand only once for all steps.
-        try {
-            fi = evaluatex(form.equation, {latex: true});
-        } catch (err) {
-            if (evaluatexErrorCodes.get(err)) {
-                console.log(evaluatexErrorCodes.get(err));
-            } else {
-                console.log(err);
+        if (!invalid) {
+            // Prepare the function beforehand only once for all steps.
+            try {
+                fi = evaluatex(form.equation, {latex: true});
+            } catch (err) {
+                if (evaluatexErrorCodes.get(err)) {
+                    console.log(evaluatexErrorCodes.get(err));
+                } else {
+                    console.log(err);
+                }
+                fi = undefined;
             }
-            fi = undefined;
-        }
-        let newSteps = generateSteps(form.steps, form.stepSize, form.initial, fi);
-        // If there was no parsing error (which means that the user has finished typing).
-        if (newSteps) {
-            steps.set(newSteps);
+            let newSteps = generateSteps(form.steps, form.stepSize, form.initial, fi);
+            // If there was no parsing error (which means that the user has finished typing).
+            if (newSteps) {
+                if (newSteps.length < form.steps + 1) {
+                    truncated = true;
+                } else {
+                    truncated = false;
+                }
+                steps.set(newSteps);
+            }
         }
     }
 </script>
@@ -72,7 +89,7 @@
         <Form bind:value={form} />
         <Preview equation={form.equation} />
         <Chart />
-        <List h={form.stepSize} equation={form.equation} />
+        <List h={form.stepSize} equation={form.equation} {truncated} />
     </div>
 </main>
 
@@ -82,6 +99,7 @@
     :root {
         --background-color: #F0D1D1;
         --ui-color: #FFF0EB;
+        --invalid-color: #f93e35;
         --border-radius: 12px;
         --shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
     }
