@@ -112,10 +112,6 @@
         justify-content: space-between;
     }
 
-    .card:last-child {
-        border-radius: 0 0 12px 12px;
-    }
-
     .card:first-child {
         border-radius: 12px 12px 0 0;
     }

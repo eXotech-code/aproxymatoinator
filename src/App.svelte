@@ -10,7 +10,8 @@
     import Locale from "./locale";
     import { evaluatexErrorCodes } from "./common";
 
-    const generateSteps = (eq: string, stepN: number, h: number, initial: number) => {
+    const generateSteps = (stepN: number, h: number, initial: number, fi: (variables: object) => number) => {
+        if (!fi) return undefined;
         let steps: Step[] = [];
 
         let y: number, f: number, x: number;
@@ -21,17 +22,7 @@
                 y = parseFloat((i === 0 ? initial : steps[i-1].y + h*steps[i-1].f).toFixed(3));
                 
                 // Calculate f_i
-                try {
-                    let fi = evaluatex(eq, {x: x, y: y, e: Math.E}, {latex: true});
-                    f = fi();
-                } catch (err) {
-                    if (evaluatexErrorCodes.get(err)) {
-                        console.log(evaluatexErrorCodes.get(err));
-                    } else {
-                        console.log(err);
-                    }
-                    return undefined;
-                }
+                f = fi({x: x, y: y, e: Math.E});
 
                 // Create a new step with those values.
                 steps = [...steps, { x: x, y: y, f: f }];
@@ -54,13 +45,24 @@
         equation: "y(1 - y)"
     }
     
+    let fi;
     $: {
-        let newSteps = generateSteps(form.equation, form.steps, form.stepSize, form.initial);
+        // Prepare the function beforehand only once for all steps.
+        try {
+            fi = evaluatex(form.equation, {latex: true});
+        } catch (err) {
+            if (evaluatexErrorCodes.get(err)) {
+                console.log(evaluatexErrorCodes.get(err));
+            } else {
+                console.log(err);
+            }
+            fi = undefined;
+        }
+        let newSteps = generateSteps(form.steps, form.stepSize, form.initial, fi);
         // If there was no parsing error (which means that the user has finished typing).
         if (newSteps) {
             steps.set(newSteps);
         }
-        console.log($steps);
     }
 </script>
 
@@ -125,7 +127,6 @@
 
     main {
         font-family: 'Roboto', sans-serif;
-		margin: none;
 	}
 
     main > div {

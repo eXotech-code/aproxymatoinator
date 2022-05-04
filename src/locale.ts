@@ -6,7 +6,9 @@ const locale = {
     stepSizeLabel: ["Wielkość kroku (h)", "Step size"],
     cardTitle: ["Krok", "Step"],
     moreButton: ["Pokaż więcej", "Show more"],
-    lessButton: ["Pokaż mniej", "Show less"]
+    lessButton: ["Pokaż mniej", "Show less"],
+    expandButton: ["Rozwiń", "Expand"],
+    collapseButton: ["Zwiń", "Collapse"]
 }
 
 const addSecretMiau = () => {
@@ -29,6 +31,8 @@ export class Locale {
     cardTitle: string;
     moreButton: string;
     lessButton: string;
+    expandButton: string;
+    collapseButton: string;
 }
 
 export default Locale;

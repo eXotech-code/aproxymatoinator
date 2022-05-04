@@ -3,7 +3,7 @@
 
     export let equation: string;
 
-    $: compiledEquation = renderToString(equation);
+    $: compiledEquation = renderToString(`y' = ${equation}`);
 </script>
 
 <div>
