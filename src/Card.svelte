@@ -5,6 +5,7 @@
     import { renderToString, fillTemplate, genTemplateEquation } from "./common";
     import { lang, steps } from "./stores";
     import Button from "./Button.svelte";
+    import { slide } from "svelte/transition";
 
     export let i: number;
     export let x: number;
@@ -63,7 +64,7 @@
     $: currentEquations = genEquations(i, expanded, $steps);
 </script>
 
-<div class="card">
+<div class="card" transition:slide>
     <div class="information">
         <p class="card-title">{`${$lang.cardTitle}: ${i}`}</p>
         <div class={ expanded ? "expanded" : "" }>
