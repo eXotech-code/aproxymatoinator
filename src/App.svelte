@@ -9,7 +9,7 @@
     import { steps, lang } from "./stores";
     import Locale from "./locale";
     import { evaluatexErrorCodes } from "./common";
-
+    import Info from "./Info.svelte";
     const generateSteps = (stepN: number, h: number, initial: number, fi: (variables: object) => number) => {
         if (!fi) return undefined;
         let steps: Step[] = [];
@@ -29,7 +29,12 @@
                 }
                 
                 // Calculate f_i
-                f = fi({x: x, y: y, e: Math.E});
+                try {
+                    f = fi({x: x, y: y, e: Math.E});
+                } catch (err) {
+                    console.log(err);
+                    return undefined;
+                }
 
                 // Create a new step with those values.
                 steps = [...steps, { x: x, y: y, f: f }];
@@ -91,6 +96,7 @@
         <Chart />
         <List h={form.stepSize} equation={form.equation} {truncated} />
     </div>
+    <Info />
 </main>
 
 <style>
