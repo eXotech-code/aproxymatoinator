@@ -24,7 +24,7 @@
             <Card {equation} {i}  x={step.x} />
         {/each}
     {/if}
-    {#if truncated}
+    {#if truncated && $steps.length < collapsedAmount || truncated && expanded}
         <div>
             <p>{$lang.truncatedMessage}</p>
         </div>
@@ -49,12 +49,12 @@
 <style>
     .outer {
         box-shadow: var(--shadow);
-        border-radius: 12px;
         display: flex;
         height: fit-content;
         flex-direction: column;
         grid-area: list;
         margin-bottom: 1rem;
+        border-radius: 12px;
     }
 
     .outer > div {
@@ -62,7 +62,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 0 0 12px 12px;
         padding: 1rem;
+    }
+
+    .outer > div:last-child {
+        border-radius: 0 0 12px 12px;
     }
 </style>

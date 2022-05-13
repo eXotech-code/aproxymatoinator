@@ -96,7 +96,7 @@
         <Chart />
         <List h={form.stepSize} equation={form.equation} {truncated} />
     </div>
-    <Info />
+    <Info equation={form.equation} />
 </main>
 
 <style>

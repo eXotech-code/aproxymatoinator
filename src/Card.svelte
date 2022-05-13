@@ -18,43 +18,47 @@
         const eqY = ["y_{${i}} = ${yPrev} + ${h} \\cdot ${fPrev} = ${y}", "y_{${i}} = ${y}"];
         const eqF = ["f_{${i}} = f(${x}, ${y}) = ${eqSubs} = ${f}", "f_{${i}} = ${f}"];
         let resY: string, resF: string;
-        if (expanded) {
-            resY = fillTemplate(
-                eqY[0],
-                { 
-                    i: i,
-                    yPrev: steps[i-1].y,
-                    h: steps[i].x / i,
-                    fPrev: steps[i-1].f,
-                    y: steps[i].y
-                }
-            );
-            // Equation with substituted variable names.
-            resF = fillTemplate(
-                eqF[0],
-                {
-                    i: i,
-                    x: steps[i].x,
-                    y: steps[i].y,
-                    eqSubs: genTemplateEquation(equation, steps, i),
-                    f: parseFloat(steps[i].f.toFixed(3))
-                }
-            );
-        } else {
-            resY = fillTemplate(
-                eqY[1],
-                {
-                    i: i,
-                    y: steps[i].y
-                }
-            )
-            resF = fillTemplate(
-                eqF[1],
-                {
-                    i: i,
-                    f: parseFloat(steps[i].f.toFixed(3))
-                }
-            )
+        try {
+            if (expanded) {
+                resY = fillTemplate(
+                    eqY[0],
+                    { 
+                        i: i,
+                        yPrev: steps[i-1].y,
+                        h: steps[i].x / i,
+                        fPrev: steps[i-1].f,
+                        y: steps[i].y
+                    }
+                );
+                // Equation with substituted variable names.
+                resF = fillTemplate(
+                    eqF[0],
+                    {
+                        i: i,
+                        x: steps[i].x,
+                        y: steps[i].y,
+                        eqSubs: genTemplateEquation(equation, steps, i),
+                        f: parseFloat(steps[i].f.toFixed(3))
+                    }
+                );
+            } else {
+                resY = fillTemplate(
+                    eqY[1],
+                    {
+                        i: i,
+                        y: steps[i].y
+                    }
+                )
+                resF = fillTemplate(
+                    eqF[1],
+                    {
+                        i: i,
+                        f: parseFloat(steps[i].f.toFixed(3))
+                    }
+                )
+            }
+        } catch (err) {
+            return [];
         }
         
         const eqs: string[] = [renderToString(resY), renderToString(resF)];
@@ -113,7 +117,7 @@
         gap: 1rem;
         justify-content: space-between;
     }
-
+    
     .card:first-child {
         border-radius: 12px 12px 0 0;
     }
