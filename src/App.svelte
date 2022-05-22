@@ -10,6 +10,7 @@
     import Locale from "./locale";
     import { evaluatexErrorCodes } from "./common";
     import Info from "./Info.svelte";
+    
     const generateSteps = (stepN: number, h: number, initial: number, fi: (variables: object) => number) => {
         if (!fi) return undefined;
         let steps: Step[] = [];
