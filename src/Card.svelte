@@ -10,11 +10,11 @@
     export let i: number;
     export let x: number;
     export let equation: string;
+    export let func: number;
 
     // Generates equations for a specified step and saves them into array for later use.
     // If an equation is already in list, it returns it.
     const genEquations = (i: number, expanded: boolean, steps: Step[]) => {
-        console.log(steps[i]);
         const eqY = ["y_{${i}} = ${yPrev} + ${h} \\cdot ${fPrev} = ${y}", "y_{${i}} = ${y}"];
         const eqF = ["f_{${i}} = f(${x}, ${y}) = ${eqSubs} = ${f}", "f_{${i}} = ${f}"];
         let resY: string, resF: string;
@@ -66,7 +66,7 @@
     }
 
     let expanded = false;
-    $: currentEquations = genEquations(i, expanded, $steps);
+    $: currentEquations = genEquations(i, expanded, $steps[func]);
 </script>
 
 <div class="card" transition:slide>

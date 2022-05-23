@@ -4,9 +4,13 @@ export type Step = {
     f?: number;
 };
 
+export type StepVals = [Step[], Step[]];
+
 export type FormT = {
-    initial: number;
+    initials: [number, number];
     steps: number;
     stepSize: number;
-    equation: string;
+    equations: [string, string];
 };
+
+export type EvalSet = Array<(variables: object) => number>;

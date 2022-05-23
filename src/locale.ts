@@ -1,8 +1,7 @@
-import { renderToString } from "./common";
-
 const locale = {
     lang: ["English", "Polski"],
-    equationLabel: ["Równanie różniczkowe", "Differential equation"],
+    equation_1Label: ["Równanie różniczkowe (1)", "Differential equation (1)"],
+    equation_2Label: ["Równanie różniczkowe (2)", "Differential equation (2)"],
     initialLabel: ["Wartość początkowa", "Initial value"],
     stepsLabel: ["Ilość kroków", "Number of steps"],
     stepSizeLabel: ["Wielkość kroku (h)", "Step size"],
@@ -46,6 +45,14 @@ const locale = {
         to calculate ${fi} is of the following form: \
         ${equation}"
     ],
+    info5TwoEqs: [
+        "W przypadku aktualnego układu równań, wzór \
+        przyjmuje formę: \
+        ${combined}.",
+        "In case of current equation, the expression used \
+        for both ${fi} calculation is of the following form: \
+        ${combined}"
+    ],
     info6: [
         "Aby uzyskać wartość nieznanej funkcji w punkcie \
         ${xEq} należy dodać do jej wartości \
@@ -80,7 +87,8 @@ export class Locale {
     }
 
     lang: string;
-    equationLabel: string;
+    equation_1Label: string;
+    equation_2Label: string;
     initialLabel: string;
     stepsLabel: string;
     stepSizeLabel: string;

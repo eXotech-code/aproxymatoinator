@@ -5,14 +5,26 @@
     import { slide } from "svelte/transition";
     import { lang } from "./stores";
 
-    export let equation: string;
+    export let equations: [string, string];
+
+    const genCombined = (eqs) => {
+        return `\\begin{cases}
+            f_i1 = ${eqs[0]}\\\\
+            f_i2 = ${eqs[1]}
+        \\end{cases}`
+    }
 
     const changeState = (state) => {
         state = !state;
         return state;
     }
     let expanded = false;
-    $: generalizedEquation = renderToString(`f_i = ${equation.replaceAll("y", "{y_i}").replaceAll("x", "{x_i}")}`);
+    let generalizedEquations = Array(2).fill("");
+    $: {
+        equations.forEach((e, i) => {
+            generalizedEquations[i] = renderToString(e.replaceAll("y", "{y_i}").replaceAll("x", "{x_i}"));
+        });
+    }
     $: templateValues = {
         yPrime: renderToString("y'"),
         xi: renderToString("x_i"),
@@ -20,7 +32,8 @@
         fi: renderToString("f_i"),
         xEq: renderToString("x = x_i"),
         yEq: renderToString("y = y_i"),
-        equation: generalizedEquation,
+        equation: `f_i = ${generalizedEquations[0]}`,
+        combined: genCombined(generalizedEquations),
         xMinOneEq: renderToString("x = x_{i-1}"),
         h: renderToString("h"),
         yiEq: renderToString("y_i = y_{i-1} + f_i \\cdot h")

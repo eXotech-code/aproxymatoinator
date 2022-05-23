@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Step, FormT } from "./types";
+    import type { Step, StepVals, FormT, EvalSet } from "./types";
     import evaluatex from "../node_modules/evaluatex/dist/evaluatex.js";
     import Header from "./Header.svelte";
     import Form from "./Form.svelte";
@@ -10,38 +10,87 @@
     import Locale from "./locale";
     import { evaluatexErrorCodes } from "./common";
     import Info from "./Info.svelte";
-    
-    const generateSteps = (stepN: number, h: number, initial: number, fi: (variables: object) => number) => {
-        if (!fi) return undefined;
-        let steps: Step[] = [];
 
-        let y: number, f: number, x: number;
-
-            for (let i = 0; i <= stepN; i++) {
-                x = parseFloat((h * i).toFixed(3));
-                // Calculate y_i
-                y = parseFloat((i === 0 ? initial : steps[i-1].y + h*steps[i-1].f).toFixed(3));
-
-                /* If computed y value exceeds biggest possible integers size
-                 * we will just stop the computation here and set the variable
-                 * that will show that fact on the list of values */
-                if (y >= Number.MAX_SAFE_INTEGER) {
-                    break;
+    const prepareEvalFunc = (equations: [string, string]) => {
+        try {
+            equations.forEach((e, i) => {
+                if (e) {
+                    fi[i] = evaluatex(e, { latex: true } )
+                } else {
+                    fi[i] = undefined;
                 }
-                
-                // Calculate f_i
-                try {
-                    f = fi({x: x, y: y, e: Math.E});
-                } catch (err) {
-                    console.log(err);
-                    return undefined;
-                }
+            });
+        } catch (err) {
+            if (evaluatexErrorCodes.get(err)) {
+                console.log(evaluatexErrorCodes.get(err));
+            } else {
+                console.log(err);
+            }
+            fi = [undefined, undefined];
+        }
 
-                // Create a new step with those values.
-                steps = [...steps, { x: x, y: y, f: f }];
+        return fi;
+    }
+
+    const generateSteps = (stepN: number, h: number, initials: [number, number], fi: EvalSet) => {
+        console.log(initials);
+        if (!fi[0]) return undefined;
+        let steps: StepVals = [[], []];
+        let tainted = [false, false];
+
+        let y: number;
+        let f: number;
+        let x: number;
+        let newStep: Step;
+        const count = fi[1] ? 2 : 1;
+
+            for (let i = 0; i < count; i++) {
+                // Calculate y_i for both functions
+                for (let j = 0; j <= stepN; j++) {
+                    if (!tainted[j]) {
+                        x = parseFloat((h * j).toFixed(3));
+                        y = parseFloat((j === 0 ? initials[i] : steps[i][j-1].y + h*steps[i][j-1].f).toFixed(3));
+
+                        /* If computed y value exceeds biggest possible integers size
+                         * we will just stop the computation here and set the variable
+                         * that will show that fact on the list of values */
+                        if (y >= Number.MAX_SAFE_INTEGER) {
+                            tainted[i] = true;
+                        }
+
+                        // Calculate f_i
+                        try {
+                            f = fi[i]({x: x, y: y, e: Math.E});
+                        } catch (err) {
+                            console.log(err);
+                            return undefined;
+                        }
+
+                        newStep = { x: x, y: y, f: f };
+                        // Create a new step with those values.
+                        steps[i] = [...steps[i], newStep];
+                    }
+                }
             }
 
         return steps;
+    }
+
+    const isInvalid = (f: FormT) => {
+        let invalid = false;
+        let vals = Object.values(f);
+        vals.forEach((v, i) => {
+            if ((i === 0 || i === vals.length-1) && (v[0] === NaN || v[0] === "")) {
+                invalid = true;
+            } else if (form.equations[1] && form.initials[1] === NaN) {
+                invalid = true;
+            } else {
+                if (v === NaN) {
+                    invalid = true;
+                }
+            }
+        });
+        return invalid;
     }
 
     let langId = 0;
@@ -52,38 +101,30 @@
     changeLang = changeLang.bind(this);
 
     let form: FormT = {
-        initial: 10,
+        initials: [10, 0],
         steps: 100,
         stepSize: 0.01,
-        equation: "y(1 - y)"
+        equations: ["y(1 - y)", ""]
     }
 
-    $: invalid = Object.values(form).includes(NaN) || Object.values(form).includes("");
-    
-    let fi;
-    let truncated = false;
+    let fi: EvalSet = [];
+    let truncated: [boolean, boolean] = [false, false];
     $: {
-        if (!invalid) {
-            // Prepare the function beforehand only once for all steps.
-            try {
-                fi = evaluatex(form.equation, {latex: true});
-            } catch (err) {
-                if (evaluatexErrorCodes.get(err)) {
-                    console.log(evaluatexErrorCodes.get(err));
-                } else {
-                    console.log(err);
-                }
-                fi = undefined;
-            }
-            let newSteps = generateSteps(form.steps, form.stepSize, form.initial, fi);
+        if (!isInvalid(form)) {
+            // Prepare the functions beforehand only once for all steps.
+            fi = prepareEvalFunc(form.equations);
+            let newSteps = generateSteps(form.steps, form.stepSize, form.initials, fi);
             // If there was no parsing error (which means that the user has finished typing).
             if (newSteps) {
-                if (newSteps.length < form.steps + 1) {
-                    truncated = true;
-                } else {
-                    truncated = false;
-                }
+                newSteps.forEach((sList, i) => {
+                    if (sList.length <= form.steps) {
+                        truncated[i] = true;
+                    } else {
+                        truncated[i] = false;
+                    }
+                });
                 steps.set(newSteps);
+                // console.log($steps);
             }
         }
     }
@@ -93,11 +134,11 @@
     <Header {changeLang} />
     <div>
         <Form bind:value={form} />
-        <Preview equation={form.equation} />
+        <Preview equations={form.equations} />
         <Chart />
-        <List h={form.stepSize} equation={form.equation} {truncated} />
+        <List h={form.stepSize} equations={form.equations} {truncated} />
     </div>
-    <Info equation={form.equation} />
+    <Info equations={form.equations} />
 </main>
 
 <style>

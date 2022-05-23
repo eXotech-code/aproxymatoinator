@@ -1,9 +1,24 @@
 <script lang="ts">
     import { renderToString } from "./common";
 
-    export let equation: string;
+    export let equations: [string, string];
 
-    $: compiledEquation = renderToString(`y' = ${equation}`);
+    const compile = (eqs: [string, string]) => {
+        let compiled = "";
+        if (eqs[1]) {
+            compiled = "\\begin{cases}";
+            eqs.forEach((e, i) => {
+                i===0 ? compiled += `x'(t) = ${e}\\\\` : compiled += `y'(t) = ${e}`;
+            })
+            compiled += "\\end{cases}";
+        } else {
+            compiled = `y' = ${eqs[0]}`
+        }
+
+        return renderToString(compiled);
+    }
+
+    $: compiledEquation = compile(equations);
 </script>
 
 <div>

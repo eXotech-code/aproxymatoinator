@@ -4,8 +4,12 @@
     import { lang } from "./stores";
 
     export let value: FormT;
-    let initial = "10";
-    $: { value.initial = parseInt(initial) };
+    let initials = ["10", ""];
+    $: {
+        initials.forEach((init, i) => {
+            value.initials[i] = parseInt(init);
+        });
+    };
     let steps = "100";
     $: { value.steps = parseFloat(steps) };
     let stepSize = "0.01";
@@ -13,8 +17,10 @@
 </script>
 
 <div>
-    <Input id="equation" bind:value={value.equation} label={$lang.equationLabel} invalid={value.equation === ""} />
-    <Input id="initial" bind:value={initial} label={$lang.initialLabel} invalid={isNaN(value.initial)} />
+    <Input id="equation_1" bind:value={value.equations[0]} label={$lang.equation_1Label} invalid={value.equations[0] === ""} />
+    <Input id="equation_2" bind:value={value.equations[1]} label={$lang.equation_2Label} invalid={value.equations[1] === ""} />
+    <Input id="initial_1" bind:value={initials[0]} label={$lang.initialLabel} invalid={isNaN(value.initials[0])} />
+    <Input id="initial_2" bind:value={initials[1]} label={$lang.initialLabel} invalid={isNaN(value.initials[1])} />
     <Input id="steps" bind:value={steps} label={$lang.stepsLabel} invalid={isNaN(value.steps)} />
     <Input id="stepS" bind:value={stepSize} label={$lang.stepSizeLabel} invalid={isNaN(value.stepSize)} />
 </div>
