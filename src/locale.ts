@@ -2,12 +2,15 @@ const locale = {
     lang: ["English", "Polski"],
     equation_1Label: ["Równanie różniczkowe (1)", "Differential equation (1)"],
     equation_2Label: ["Równanie różniczkowe (2)", "Differential equation (2)"],
-    initialLabel: ["Wartość początkowa", "Initial value"],
+    initialLabel_1: ["Wartość początkowa (1)", "Initial value (1)"],
+    initialLabel_2: ["Wartość początkowa (2)", "Initial value (2)"],
     stepsLabel: ["Ilość kroków", "Number of steps"],
     stepSizeLabel: ["Wielkość kroku (h)", "Step size"],
+    listHeader: ["Lista kroków dla funkcji", "Step list for function"],
     cardTitle: ["Krok", "Step"],
     moreButton: ["Pokaż więcej", "Show more"],
     lessButton: ["Pokaż mniej", "Show less"],
+    showFuncButton: ["Pokaż funkcję ${function}", "Show function ${function}"],
     expandButton: ["Rozwiń", "Expand"],
     collapseButton: ["Zwiń", "Collapse"],
     truncatedMessage: [
@@ -17,8 +20,8 @@ const locale = {
     title1: ["Opis symboli", "Symbol description"],
     title2: ["Sposób działania", "How it works?"],
     info1: [
-        "${yPrime} - pochodna nieznanej funkcji",
-        "${yPrime} - derivative of unknown function"
+        "${prime} - pochodne nieznanych funkcji",
+        "${prime} - derivatives of unknown functions"
     ],
     info2: [
         "${xi} - punkt, dla którego przybliżamy wynik nieznanej funkcji",
@@ -40,10 +43,10 @@ const locale = {
     info5: [
         "W przypadku aktualnego równania, wzór na ${fi} \
         przyjmuje formę: \
-        ${equation}.",
+        ${combined}.",
         "In case of current equation, the expression used \
         to calculate ${fi} is of the following form: \
-        ${equation}"
+        ${combined}"
     ],
     info5TwoEqs: [
         "W przypadku aktualnego układu równań, wzór \
@@ -89,14 +92,17 @@ export class Locale {
     lang: string;
     equation_1Label: string;
     equation_2Label: string;
-    initialLabel: string;
+    initialLabel_1: string;
+    initialLabel_2: string;
     stepsLabel: string;
     stepSizeLabel: string;
+    listHeader: string;
     cardTitle: string;
     moreButton: string;
     lessButton: string;
     expandButton: string;
     collapseButton: string;
+    showFuncButton: string;
     truncatedMessage: string;
     title1: string;
     title2: string;

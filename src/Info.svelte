@@ -6,12 +6,21 @@
     import { lang } from "./stores";
 
     export let equations: [string, string];
+    export let system: boolean;
 
-    const genCombined = (eqs) => {
-        return `\\begin{cases}
-            f_i1 = ${eqs[0]}\\\\
-            f_i2 = ${eqs[1]}
-        \\end{cases}`
+    const genCombined = (eqs, system: boolean) => {
+        // Change all mentions of y or x into y_i or x_i.
+        eqs.forEach(e => e.replaceAll("y", "y_{i}").replaceAll("x", "x_{i}"));
+        let combined;
+        if (system) {
+            combined = `f_i = \\begin{cases}
+            ${eqs[0]}\\\\
+            ${eqs[1]}\\
+            \\end{cases}`
+        } else {
+            combined = `f_i = ${eqs[0]}`;
+        }
+        return renderToString(combined);
     }
 
     const changeState = (state) => {
@@ -20,20 +29,14 @@
     }
     let expanded = false;
     let generalizedEquations = Array(2).fill("");
-    $: {
-        equations.forEach((e, i) => {
-            generalizedEquations[i] = renderToString(e.replaceAll("y", "{y_i}").replaceAll("x", "{x_i}"));
-        });
-    }
     $: templateValues = {
-        yPrime: renderToString("y'"),
+        prime: renderToString("y',\\;x'"),
         xi: renderToString("x_i"),
         yi: renderToString("y_i"),
         fi: renderToString("f_i"),
         xEq: renderToString("x = x_i"),
         yEq: renderToString("y = y_i"),
-        equation: `f_i = ${generalizedEquations[0]}`,
-        combined: genCombined(generalizedEquations),
+        combined: genCombined(equations, system),
         xMinOneEq: renderToString("x = x_{i-1}"),
         h: renderToString("h"),
         yiEq: renderToString("y_i = y_{i-1} + f_i \\cdot h")

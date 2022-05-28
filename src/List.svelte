@@ -1,5 +1,6 @@
 <script lang="ts">
     import { steps, lang } from "./stores";
+    import { fillTemplate } from "./common";
     import Card from "./Card.svelte";
     import Button from "./Button.svelte";
     import MdExpandMore from "svelte-icons/md/MdExpandMore.svelte";
@@ -9,8 +10,8 @@
     export let h: number
     export let equations: [string, string];
     export let truncated: [boolean, boolean];
+    export let system: boolean;
 
-    let func = 0; // The currently visible function
     let collapsedAmount = 11;
     let customSteps = [[],[]];
     let expanded = false;
@@ -19,15 +20,16 @@
             customSteps[i] = s.slice(0, expanded ? s.length : collapsedAmount);
         });
     }
-    const msg = "Pokaż funkcję ";
+    $: { if (!customSteps[1].length) func = 0 };
     const functions = ["x(t)", "y(t)"];
+    let func = 0;
 </script>
 
 <div class="outer">
     <div>
-        <p>Lista kroków dla funkcji {functions[func]}</p>
+        <p>{$lang.listHeader} {functions[func]}</p>
         {#if customSteps[1].length}
-            <Button label={`${msg}${functions[+!func]}`}
+            <Button label={fillTemplate($lang.showFuncButton, { function: functions[+!func] })}
                 func={() => func ? func = 0 : func = 1}
                 expanded={func ? true : false}
             >
@@ -37,7 +39,7 @@
     </div>
     {#if h}
         {#each customSteps[func] as step, i}
-            <Card equation={equations[func]} {i}  x={step.x} {func} />
+            <Card equation={equations[func]} {i} x={step.x} {system} {func} />
         {/each}
     {/if}
     {#if truncated[func] && $steps[func].length < collapsedAmount || truncated[func] && expanded[func]}

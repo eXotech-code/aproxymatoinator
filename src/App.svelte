@@ -104,7 +104,7 @@
         initials: [10, 0],
         steps: 100,
         stepSize: 0.01,
-        equations: ["y(1 - y)", ""]
+        equations: ["3x+y", ""]
     }
 
     let fi: EvalSet = [];
@@ -128,6 +128,10 @@
             }
         }
     }
+
+    /* This shows whether input is a system of differential
+     * equation or rather only one equation. */
+    $: system = $steps[1].length > 0
 </script>
 
 <main>
@@ -136,9 +140,9 @@
         <Form bind:value={form} />
         <Preview equations={form.equations} />
         <Chart />
-        <List h={form.stepSize} equations={form.equations} {truncated} />
+        <List h={form.stepSize} equations={form.equations} {truncated} {system} />
     </div>
-    <Info equations={form.equations} />
+    <Info equations={form.equations} {system} />
 </main>
 
 <style>

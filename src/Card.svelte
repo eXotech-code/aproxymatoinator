@@ -10,12 +10,24 @@
     export let i: number;
     export let x: number;
     export let equation: string;
+    export let system: boolean;
     export let func: number;
+
+    const functionSymbol = (system: boolean, func: number, i: number) => {
+        let symbol: string;
+        if (system) {
+            symbol =  func ? "y_{${i}}" : "x_{${i}}";
+        } else {
+            symbol = "y_{${i}}"
+        }
+
+        return fillTemplate(symbol, { i: i });
+    }
 
     // Generates equations for a specified step and saves them into array for later use.
     // If an equation is already in list, it returns it.
-    const genEquations = (i: number, expanded: boolean, steps: Step[]) => {
-        const eqY = ["y_{${i}} = ${yPrev} + ${h} \\cdot ${fPrev} = ${y}", "y_{${i}} = ${y}"];
+    const genEquations = (i: number, expanded: boolean, steps: Step[], func: number, system: boolean) => {
+        const eqY = ["${i} = ${yPrev} + ${h} \\cdot ${fPrev} = ${y}", "${i} = ${y}"];
         const eqF = ["f_{${i}} = f(${x}, ${y}) = ${eqSubs} = ${f}", "f_{${i}} = ${f}"];
         let resY: string, resF: string;
         try {
@@ -23,7 +35,7 @@
                 resY = fillTemplate(
                     eqY[0],
                     { 
-                        i: i,
+                        i: functionSymbol(system, func, i),
                         yPrev: steps[i-1].y,
                         h: steps[i].x / i,
                         fPrev: steps[i-1].f,
@@ -45,7 +57,7 @@
                 resY = fillTemplate(
                     eqY[1],
                     {
-                        i: i,
+                        i: functionSymbol(system, func, i),
                         y: steps[i].y
                     }
                 )
@@ -66,14 +78,14 @@
     }
 
     let expanded = false;
-    $: currentEquations = genEquations(i, expanded, $steps[func]);
+    $: currentEquations = genEquations(i, expanded, $steps[func], func, system);
 </script>
 
 <div class="card" transition:slide>
     <div class="information">
         <p class="card-title">{`${$lang.cardTitle}: ${i}`}</p>
         <div class={ expanded ? "expanded" : "" }>
-            <p>{@html renderToString(`x_{${i}} = ${x}`)}</p>
+            <p>{@html renderToString(`t_{${i}} = ${x}`)}</p>
             {#each currentEquations as eq}
                 <p>{@html eq}</p>
             {/each}
