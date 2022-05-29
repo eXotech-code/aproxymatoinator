@@ -41,7 +41,7 @@
     </div>
     {#if steps}
         {#each customSteps as step, i}
-            <Card equation={equations[func]} {i} x={step.x} {system} {func} {steps} />
+            <Card equation={equations[func % 2]} {i} x={step.x} {system} {func} {steps} method={dropdowns.method} />
         {/each}
         {#if truncated && steps.length < collapsedAmount || truncated && expanded}
             <div>

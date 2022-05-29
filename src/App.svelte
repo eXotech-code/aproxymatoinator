@@ -69,7 +69,6 @@
 
     // Generates a list of steps based on a certain requirement.
     const generateSteps = (stepN: number, h: number, initials: [number, number], fi: EvalSet, method: string, i: number) => {
-        console.log("Called!");
         if (!fi[0]) return undefined;
         let tainted = [false, false];
 
@@ -145,21 +144,30 @@
     const objEqual = (obj1: Object, obj2: Object) => {
         if (!(obj1 && obj2)) return false;
         let equal = true;
+        let obj1Vals = Object.values(obj1);
         let obj2Vals = Object.values(obj2);
-        Object.values(obj1).forEach((v, i) => {
+        let v1, v2;
+        for (let i = 0; i < obj1Vals.length; i++) {
+            v1 = obj1Vals[i];
+            v2 = obj2Vals[i];
+
             /* If both arrays contain false values,
              * then they are cosidered as equal
              * whether those falsy values are
              * actually different in type. */
-            if (Array.isArray(v)) {
-                equal = arrEqual(v, obj2Vals[i]);
-                v.forEach((val, j) => {
-                    if (!val && !obj2Vals[i][j]) equal = true;
-                });
+            if (Array.isArray(v1)) {
+                if (!arrEqual(v1, v2)) {
+                    for (let j = 0; j < v1.length; j++) {
+                        if (v1[j] && v2[j]) return false;
+                    }
+                }
             } else {
-                equal = v === obj2Vals[i];
+                equal = v1 === v2;
+                if (!equal) {
+                    return false;
+                }
             }
-        });
+        }
 
         return equal;
     }
@@ -172,10 +180,10 @@
     changeLang = changeLang.bind(this);
 
     let form: FormT = {
-        initials: [10, NaN],
+        initials: [2, 5],
         steps: 100,
         stepSize: 0.01,
-        equations: ["3x+y", ""]
+        equations: ["3x+y", "x+3y"]
     }
 
     /* This is used by getNeeded to compare if something changed
@@ -190,8 +198,10 @@
     $: { chartNeeds.forEach((need, i) => needs[i] = need) };
     // Prepare the functions beforehand only once for all steps.
     $: fi = prepareEvalFunc(form.equations);
+    let system = false;
     $: {
         if (!isInvalid(form)) {
+            system = !!form.equations[1].length;
             changed = !objEqual(oldForm, form);
             needs.forEach(n => {
                 if (!arrEqual(n, emptyNeed)) {
@@ -206,9 +216,6 @@
         }
     }
 
-    /* This shows whether input is a system of differential
-     * equations or rather only one equation. */
-    $: system = $steps[1].length > 0;
     // Set of two arrays as chart data;
     let chartSet: StepVals = [[],[]];
     $: {
@@ -217,6 +224,8 @@
             if (!arrEqual(n, emptyNeed)) {
                 comboNumber = combinations.get(n.join(""));
                 chartSet[i] = $steps[comboNumber];
+            } else {
+                chartSet[i] = [];
             }
         });
     }

@@ -4,7 +4,7 @@
     import { lang } from "./stores";
 
     export let value: FormT;
-    let initials = ["10", ""];
+    let initials = ["2", "5"];
     $: {
         initials.forEach((init, i) => {
             value.initials[i] = parseInt(init);

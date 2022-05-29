@@ -12,7 +12,7 @@
             })
             compiled += "\\end{cases}";
         } else {
-            compiled = `y' = ${eqs[0]}`
+            compiled = `x' = ${eqs[0]}`
         }
 
         return renderToString(compiled);

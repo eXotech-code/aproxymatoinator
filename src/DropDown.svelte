@@ -1,11 +1,31 @@
 <script lang="ts">
     import MdExpandLess from "svelte-icons/md/MdExpandLess.svelte";
     import MdExpandMore from "svelte-icons/md/MdExpandMore.svelte";
+    import { lang } from "./stores";
 
     export let label: string;
     export let options: string[];
     export let selected: string = options[0];
 
+    /* To eliminate problems with translation, temporarily
+     * change internal option representation */
+    let internalOptions: string[];
+    $: {
+        internalOptions = options;
+        let indexOfNoting = options.indexOf("Nothing");
+        if (indexOfNoting !== -1) {
+            internalOptions.splice(indexOfNoting, 1);
+            internalOptions = [...internalOptions, $lang.nothing];
+        }
+    }
+    let internalSelected = selected === "Nothing" ? $lang.nothing : selected;
+    $: {
+        if (internalSelected === $lang.nothing) {
+            selected = "Nothing";
+        } else {
+            selected = internalSelected;
+        }
+    }
     let expanded = false;
 </script>
 
@@ -13,7 +33,7 @@
     <p>{label}</p>
     <div class="dropdown">
         <div class="interaction" on:click={() => expanded = !expanded}>
-            <p>{selected}</p>
+            <p>{internalSelected}</p>
             <div class="icon">
                 {#if expanded}
                     <MdExpandLess />
@@ -24,8 +44,8 @@
         </div>
         {#if expanded}
             <div class="list">
-                {#each options as opt}
-                    <div on:click={() => { selected = opt; expanded = !expanded }}>{opt}</div>
+                {#each internalOptions as opt}
+                    <div on:click={() => { internalSelected = opt; expanded = !expanded }}>{opt}</div>
                 {/each}
             </div>
         {/if}
@@ -54,7 +74,7 @@
 
     .interaction {
         display: flex;
-        width: 10rem;
+        width: 11rem;
         gap: 2rem;
         padding: 1rem;
         justify-content: space-between;
@@ -78,7 +98,7 @@
 
     .list > div {
         cursor: pointer;
-        width: 10rem;
+        width: 11rem;
         padding: 0.5rem 1rem;
         background: #FFE0D6;
     }

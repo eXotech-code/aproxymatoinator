@@ -15,10 +15,11 @@
         if (chart) chart.destroy();
     }
 
-    const chartDataFields = (datasets: StepVals) => {
+    const chartDataFields = (needs: ChartNeeds, datasets: StepVals) => {
         const colors = ["#51D4FF", "#FF7547"];
         const borders = ["#ADEBFF", "#faaa8e"]
-        const labels = ["x(t)", "y(t)"];
+        let labels: string[] = [];
+        needs.forEach(n => labels.push(n.join(" ")));
         let dataFields = [];
         datasets.forEach((s, i) => {
             if (s.length) {
@@ -37,11 +38,14 @@
     const createChart = (ctx: CanvasRenderingContext2D, chart: Chart, datasets: StepVals) => {
         if (!ctx) return undefined;
         deleteChart(chart);
+        /* If one of the datasets is empty, choose another one
+         * to base the x-axis on. */
+        let axisDs = datasets[0].length ? datasets[0] : datasets[1];
         return new Chart(ctx, {
             type: "line",
             data: {
-                labels: datasets[0].map(vs => vs.x),
-                datasets: chartDataFields(datasets)
+                labels: axisDs.map(vs => vs.x),
+                datasets: chartDataFields(needs, datasets)
             },
             options: {
                 elements: {
@@ -75,12 +79,16 @@
     let canvas: HTMLCanvasElement;
     let context: CanvasRenderingContext2D;
     onMount(() => context = canvas.getContext("2d"));
-    let datasets: StepVals = [[],[]];
+    let datasets: StepVals;
     $: {
+        // Reset the dataset before adding stuff to it.
+        datasets = [[],[]];
         stepSet.forEach((s, i) => {
-            if (s.length) s.forEach(s => {
-                datasets[i] = [...datasets[i], { x: s.x, y: s.y }];
-            });
+            if (s.length) {
+                s.forEach(s => {
+                    datasets[i] = [...datasets[i], { x: s.x, y: s.y }];
+                });
+            }
         })
 
         chart = createChart(context, chart, datasets);
@@ -105,12 +113,12 @@
 <div class="outer">
     <div class="dropdowns">
         <DropDown
-            label="Compare"
+            label={$lang.comparisonDropdown1}
             options={removeSelected(options, selected[1])}
             bind:selected={selected[0]}
         />
         <DropDown
-            label="To"
+            label={$lang.comparisonDropdown2}
             options={removeSelected(options, selected[0])}
             bind:selected={selected[1]}
         />

@@ -10,9 +10,18 @@ export const fillTemplate = (str: string, vals: object) => {
     return newStr;
 }
 
-export const genTemplateEquation = (eq:string, steps: Step[], i: number) => {
-    const tokens = { x: steps[i].x, y: steps[i].y, e: Math.E };
-    const replaced = eq.replace(/(\\[A-Za-z]+{)|([xy])/g, (x, trash, idx) => tokens[idx]);
+export const genTemplateEquation = (eq: string, steps: Step[], i: number, override = { x: null, y: null }) => {
+    let x = override.x ? override.x : steps[i].x;
+    let y = override.y ? override.y : steps[i].y;
+    const tokens = { x: x, y: y, e: Math.E };
+    const replaced = eq.replace(/(\\[A-Za-z]+{)|([1-9xy])/g, (x, trash, idx) => {
+        let parsed = parseFloat(idx);
+        if (isNaN(parsed)) {
+            return tokens[idx];
+        } else {
+            return `${parsed} \\cdot`;
+        }
+    });
 
     return replaced;
 }

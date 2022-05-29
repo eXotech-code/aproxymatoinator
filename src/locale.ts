@@ -8,6 +8,9 @@ const locale = {
     stepSizeLabel: ["Wielkość kroku (h)", "Step size"],
     functionDropdown: ["Pokaż", "Show"],
     methodDropdown: ["Metoda", "Method"],
+    comparisonDropdown1: ["Porównaj", "Compare"],
+    comparisonDropdown2: ["Do", "To"],
+    nothing: ["Nic", "nothing"],
     cardTitle: ["Krok", "Step"],
     moreButton: ["Pokaż więcej", "Show more"],
     lessButton: ["Pokaż mniej", "Show less"],
@@ -99,6 +102,9 @@ export class Locale {
     stepSizeLabel: string;
     functionDropdown: string;
     methodDropdown: string;
+    comparisonDropdown1: string;
+    comparisonDropdown2: string;
+    nothing: string;
     cardTitle: string;
     moreButton: string;
     lessButton: string;
