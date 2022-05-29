@@ -3,7 +3,7 @@
     import MdAdd from "svelte-icons/md/MdAdd.svelte";
     import MdRemove from "svelte-icons/md/MdRemove.svelte";
     import { renderToString, fillTemplate, genTemplateEquation } from "./common";
-    import { lang, steps } from "./stores";
+    import { lang } from "./stores";
     import Button from "./Button.svelte";
     import { slide } from "svelte/transition";
 
@@ -12,6 +12,7 @@
     export let equation: string;
     export let system: boolean;
     export let func: number;
+    export let steps: Step[];
 
     const functionSymbol = (system: boolean, func: number, i: number) => {
         let symbol: string;
@@ -30,6 +31,8 @@
         const eqY = ["${i} = ${yPrev} + ${h} \\cdot ${fPrev} = ${y}", "${i} = ${y}"];
         const eqF = ["f_{${i}} = f(${x}, ${y}) = ${eqSubs} = ${f}", "f_{${i}} = ${f}"];
         let resY: string, resF: string;
+        let fTruncated = [];
+        steps[i].f.forEach(fn => fTruncated.push(parseFloat(fn.toFixed(3))));
         try {
             if (expanded) {
                 resY = fillTemplate(
@@ -50,7 +53,7 @@
                         x: steps[i].x,
                         y: steps[i].y,
                         eqSubs: genTemplateEquation(equation, steps, i),
-                        f: parseFloat(steps[i].f.toFixed(3))
+                        f: fTruncated
                     }
                 );
             } else {
@@ -65,7 +68,7 @@
                     eqF[1],
                     {
                         i: i,
-                        f: parseFloat(steps[i].f.toFixed(3))
+                        f: fTruncated
                     }
                 )
             }
@@ -78,7 +81,7 @@
     }
 
     let expanded = false;
-    $: currentEquations = genEquations(i, expanded, $steps[func], func, system);
+    $: currentEquations = genEquations(i, expanded, steps, func, system);
 </script>
 
 <div class="card" transition:slide>

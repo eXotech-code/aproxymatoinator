@@ -13,7 +13,7 @@
 <style>
     div {
         background: #FFE0D6;
-        border-bottom: 1px solid #3A445D;
+        border-bottom: 1px solid var(--border-color);
         border-radius: 4px 4px 0 0;
         position: relative;
         height: fit-content;

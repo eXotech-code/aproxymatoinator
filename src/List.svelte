@@ -1,66 +1,68 @@
 <script lang="ts">
-    import { steps, lang } from "./stores";
-    import { fillTemplate } from "./common";
+    import { lang } from "./stores";
     import Card from "./Card.svelte";
     import Button from "./Button.svelte";
+    import DropDown from "./DropDown.svelte";
     import MdExpandMore from "svelte-icons/md/MdExpandMore.svelte";
     import MdExpandLess from "svelte-icons/md/MdExpandLess.svelte";
-    import MdFunctions from "svelte-icons/md/MdFunctions.svelte";
+    import type { Needs } from "./types";
+    import { combinations } from "./common";
 
-    export let h: number
     export let equations: [string, string];
-    export let truncated: [boolean, boolean];
+    export let numberOfSteps: number;
     export let system: boolean;
+    export let needs: Needs; // Expresses a need for a certain function - method combination.
+    export let steps; // Steps that this module expressed need for.
 
     let collapsedAmount = 11;
-    let customSteps = [[],[]];
     let expanded = false;
-    $: {
-        $steps.forEach((s, i) => {
-            customSteps[i] = s.slice(0, expanded ? s.length : collapsedAmount);
-        });
-    }
-    $: { if (!customSteps[1].length) func = 0 };
+    let customSteps = [];
+    let truncated = false;
+    $: { 
+        if (steps) {
+            customSteps = expanded ? steps : steps.slice(0, collapsedAmount);
+            truncated = !(steps.length === numberOfSteps + 1);
+        }
+    };
     const functions = ["x(t)", "y(t)"];
-    let func = 0;
+    const methods = ["Euler", "Runge-Kutta"];
+    let dropdowns = {
+        function: functions[0],
+        method: methods[0]
+    };
+    $: { needs = [dropdowns.function, dropdowns.method] };
+    $: func = combinations.get(needs.join(""));
 </script>
 
 <div class="outer">
-    <div>
-        <p>{$lang.listHeader} {functions[func]}</p>
-        {#if customSteps[1].length}
-            <Button label={fillTemplate($lang.showFuncButton, { function: functions[+!func] })}
-                func={() => func ? func = 0 : func = 1}
-                expanded={func ? true : false}
-            >
-                <MdFunctions />
-            </Button>
-        {/if}
+    <div class="dropdowns">
+        <DropDown label={$lang.functionDropdown} options={system ? functions : functions.slice(0, 1)} bind:selected={dropdowns.function} />
+        <DropDown label={$lang.methodDropdown} options={methods} bind:selected={dropdowns.method} />
     </div>
-    {#if h}
-        {#each customSteps[func] as step, i}
-            <Card equation={equations[func]} {i} x={step.x} {system} {func} />
+    {#if steps}
+        {#each customSteps as step, i}
+            <Card equation={equations[func]} {i} x={step.x} {system} {func} {steps} />
         {/each}
-    {/if}
-    {#if truncated[func] && $steps[func].length < collapsedAmount || truncated[func] && expanded[func]}
-        <div>
-            <p>{$lang.truncatedMessage}</p>
-        </div>
-    {/if}
-    {#if $steps[func].length > collapsedAmount}
-        <div>
-            <Button 
-                label={expanded ? $lang.collapseButton : $lang.expandButton}
-                func={() => expanded = !expanded}
-                {expanded}
-            >
-                {#if expanded}
-                    <MdExpandLess />
-                {:else}
-                    <MdExpandMore />
-                {/if}
-            </Button>
-        </div>
+        {#if truncated && steps.length < collapsedAmount || truncated && expanded}
+            <div>
+                <p>{$lang.truncatedMessage}</p>
+            </div>
+        {/if}
+        {#if steps.length > collapsedAmount}
+            <div>
+                <Button 
+                    label={expanded ? $lang.collapseButton : $lang.expandButton}
+                    func={() => expanded = !expanded}
+                    {expanded}
+                >
+                    {#if expanded}
+                        <MdExpandLess />
+                    {:else}
+                        <MdExpandMore />
+                    {/if}
+                </Button>
+            </div>
+        {/if}
     {/if}
 </div>
 
@@ -90,5 +92,9 @@
 
     .outer > div:first-child {
         border-radius: 12px 12px 0 0;
+    }
+
+    .dropdowns {
+        gap: 4rem;
     }
 </style>

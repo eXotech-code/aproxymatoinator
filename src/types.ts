@@ -1,10 +1,10 @@
 export type Step = {
     x: number;
     y: number;
-    f?: number;
+    f?: number[];
 };
 
-export type StepVals = [Step[], Step[]];
+export type StepVals = [Step[], Step[], Step[]?, Step[]?];
 
 export type FormT = {
     initials: [number, number];
@@ -14,3 +14,6 @@ export type FormT = {
 };
 
 export type EvalSet = Array<(variables: object) => number>;
+
+export type Needs = [string, string];
+export type ChartNeeds = [Needs, Needs];

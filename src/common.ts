@@ -22,3 +22,10 @@ export const evaluatexErrorCodes = new Map([
     ["Error: Symbol y is undefined or not a number", "SymUndef"],
     ["Error: Symbol x is undefined or not a number", "SymUndef"]
 ]);
+
+export const combinations = new Map([
+    ["x(t)Euler", 0],
+    ["y(t)Euler", 1],
+    ["x(t)Runge-Kutta", 2],
+    ["y(t)Runge-Kutta", 3]
+]);
