@@ -4,25 +4,25 @@
     import { lang } from "./stores";
 
     export let value: FormT;
-    let initials = ["2", "5"];
+    let init = ["2", "5"];
     $: {
-        initials.forEach((init, i) => {
-            value.initials[i] = parseInt(init);
+        init.forEach((init, i) => {
+            value.init[i] = parseInt(init);
         });
     };
-    let steps = "100";
-    $: { value.steps = parseFloat(steps) };
-    let stepSize = "0.01";
-    $: { value.stepSize = parseFloat(stepSize) };
+    let n = "100";
+    $: { value.n = parseFloat(n) };
+    let h = "0.01";
+    $: { value.h = parseFloat(h) };
 </script>
 
 <div>
-    <Input id="equation_1" bind:value={value.equations[0]} label={$lang.equation_1Label} invalid={value.equations[0] === ""} />
-    <Input id="equation_2" bind:value={value.equations[1]} label={$lang.equation_2Label} invalid={value.equations[1] === ""} />
-    <Input id="initial_1" bind:value={initials[0]} label={$lang.initialLabel_1} invalid={isNaN(value.initials[0])} />
-    <Input id="initial_2" bind:value={initials[1]} label={$lang.initialLabel_2} invalid={isNaN(value.initials[1])} />
-    <Input id="steps" bind:value={steps} label={$lang.stepsLabel} invalid={isNaN(value.steps)} />
-    <Input id="stepS" bind:value={stepSize} label={$lang.stepSizeLabel} invalid={isNaN(value.stepSize)} />
+    <Input id="eq1" bind:value={value.eqs[0]} label={$lang.equation_1Label} invalid={value.eqs[0] === ""} />
+    <Input id="eq2" bind:value={value.eqs[1]} label={$lang.equation_2Label} invalid={value.eqs[1] === ""} />
+    <Input id="init1" bind:value={init[0]} label={$lang.initialLabel_1} invalid={isNaN(value.init[0])} />
+    <Input id="init2" bind:value={init[1]} label={$lang.initialLabel_2} invalid={isNaN(value.init[1])} />
+    <Input id="n" bind:value={n} label={$lang.stepsLabel} invalid={isNaN(value.n)} />
+    <Input id="h" bind:value={h} label={$lang.stepSizeLabel} invalid={isNaN(value.h)} />
 </div>
 
 <style>

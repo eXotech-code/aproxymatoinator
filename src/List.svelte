@@ -1,47 +1,56 @@
 <script lang="ts">
     import { lang } from "./stores";
+    import { fillTemplate, options, renderToString, genTemplateEquation } from "./common";
+    import type { ComponentSteps } from "./types";
     import Card from "./Card.svelte";
     import Button from "./Button.svelte";
     import DropDown from "./DropDown.svelte";
     import MdExpandMore from "svelte-icons/md/MdExpandMore.svelte";
     import MdExpandLess from "svelte-icons/md/MdExpandLess.svelte";
-    import type { Needs } from "./types";
-    import { combinations } from "./common";
 
-    export let equations: [string, string];
-    export let numberOfSteps: number;
-    export let system: boolean;
-    export let needs: Needs; // Expresses a need for a certain function - method combination.
-    export let steps; // Steps that this module expressed need for.
+    export let n: number;
+    export let steps: ComponentSteps;
+    export let requirement = options[0];
+
+    const equations = (steps: ComponentSteps, requirement: string) => {
+        const splitted = requirement.split(" ");
+        const f = splitted[0];
+        let eqs = [];
+
+       steps.forEach((s, i) => {
+            let step = [renderToString(`t_{${i}} = ${s.t}`)];
+            s.ft.forEach((k, j) => {
+                step.push(renderToString(`k_{${j}} = ${k}`));
+            })
+            const currentFunction = f.replace("t", `x_{${i}}, y_{${i}}`);
+            step.push(renderToString(`${currentFunction} = ${s.y}`));
+            eqs.push(step);
+       }) 
+
+       return eqs;
+    }
 
     let collapsedAmount = 11;
     let expanded = false;
     let customSteps = [];
     let truncated = false;
-    $: { 
+    let eqs: Array<Array<string>>;
+    $: {
         if (steps) {
             customSteps = expanded ? steps : steps.slice(0, collapsedAmount);
-            truncated = !(steps.length === numberOfSteps + 1);
+            truncated = !(steps.length === n + 1);
+            eqs = equations(customSteps, requirement);
         }
     };
-    const functions = ["x(t)", "y(t)"];
-    const methods = ["Euler", "Runge-Kutta"];
-    let dropdowns = {
-        function: functions[0],
-        method: methods[0]
-    };
-    $: { needs = [dropdowns.function, dropdowns.method] };
-    $: func = combinations.get(needs.join(""));
 </script>
 
 <div class="outer">
     <div class="dropdowns">
-        <DropDown label={$lang.functionDropdown} options={system ? functions : functions.slice(0, 1)} bind:selected={dropdowns.function} />
-        <DropDown label={$lang.methodDropdown} options={methods} bind:selected={dropdowns.method} />
+        <DropDown label={$lang.listDropdown} {options} bind:selected={requirement} />
     </div>
     {#if steps}
-        {#each customSteps as step, i}
-            <Card equation={equations[func % 2]} {i} x={step.x} {system} {func} {steps} method={dropdowns.method} />
+        {#each eqs as e, i}
+            <Card {i} equations={e} />
         {/each}
         {#if truncated && steps.length < collapsedAmount || truncated && expanded}
             <div>
@@ -94,7 +103,7 @@
         border-radius: 12px 12px 0 0;
     }
 
-    .dropdowns {
+    /* .dropdowns {
         gap: 4rem;
-    }
+    } */
 </style>

@@ -1,19 +1,26 @@
 export type Step = {
+    t: number;
     x: number;
     y: number;
-    f?: number[];
+    fx?: number[];
+    fy?: number[];
 };
 
-export type StepVals = [Step[], Step[], Step[]?, Step[]?];
+export type ComponentStep = {
+    t: number;
+    y: number;
+    ft: number[];
+}
+export type ComponentSteps = ComponentStep[];
+export type ChartSteps = ComponentSteps[];
 
 export type FormT = {
-    initials: [number, number];
-    steps: number;
-    stepSize: number;
-    equations: [string, string];
+    init: [number, number];
+    n: number;
+    h: number;
+    eqs: [string, string];
 };
 
 export type EvalSet = Array<(variables: object) => number>;
 
-export type Needs = [string, string];
-export type ChartNeeds = [Needs, Needs];
+export type Dataset = [number[], number[]];

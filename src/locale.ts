@@ -6,8 +6,7 @@ const locale = {
     initialLabel_2: ["Wartość początkowa (2)", "Initial value (2)"],
     stepsLabel: ["Ilość kroków", "Number of steps"],
     stepSizeLabel: ["Wielkość kroku (h)", "Step size"],
-    functionDropdown: ["Pokaż", "Show"],
-    methodDropdown: ["Metoda", "Method"],
+    listDropdown: ["Pokaż", "Show"],
     comparisonDropdown1: ["Porównaj", "Compare"],
     comparisonDropdown2: ["Do", "To"],
     nothing: ["Nic", "nothing"],
@@ -100,8 +99,7 @@ export class Locale {
     initialLabel_2: string;
     stepsLabel: string;
     stepSizeLabel: string;
-    functionDropdown: string;
-    methodDropdown: string;
+    listDropdown: string;
     comparisonDropdown1: string;
     comparisonDropdown2: string;
     nothing: string;

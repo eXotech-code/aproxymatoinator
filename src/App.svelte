@@ -1,176 +1,196 @@
 <script lang="ts">
-    import type { Step, StepVals, FormT, EvalSet, Needs, ChartNeeds } from "./types";
+    import type { Step, FormT, EvalSet, ComponentStep, ChartSteps } from "./types";
     import evaluatex from "../node_modules/evaluatex/dist/evaluatex.js";
     import Header from "./Header.svelte";
     import Form from "./Form.svelte";
     import List from "./List.svelte";
     import Preview from "./Preview.svelte";
     import Chart from "./Chart.svelte";
-    import { steps, lang } from "./stores";
+    import { lang } from "./stores";
     import Locale from "./locale";
-    import { evaluatexErrorCodes, combinations } from "./common";
+    import { evaluatexErrorCodes, options } from "./common";
     import Info from "./Info.svelte";
 
-    const prepareEvalFunc = (equations: [string, string]) => {
-        try {
-            equations.forEach((e, i) => {
-                if (e) {
-                    fi[i] = evaluatex(e, { latex: true } )
-                } else {
-                    fi[i] = undefined;
-                }
-            });
-        } catch (err) {
-            if (evaluatexErrorCodes.get(err)) {
-                console.log(evaluatexErrorCodes.get(err));
+    const isValid = (f: FormT) => {
+        let valid = true;
+        let vals = Object.values(f);
+        vals.forEach((v, i) => {
+            if ((i === 0 || i === vals.length-1) && (v[0] === NaN || v[0] === "")) {
+                valid = false;
+            } else if (form.eqs[1] && form.init[1] === NaN) {
+                valid = false;
             } else {
-                console.log(err);
+                if (v === NaN) {
+                    valid = false;
+                }
             }
-            fi = [undefined, undefined];
+        });
+
+        return valid;
+    }
+
+    const prepareEvalFunc = (form: FormT) => {
+        let fi = [undefined, undefined];
+        if (isValid(form)) {
+            try {
+                form.eqs.forEach((e, i) => {
+                    if (e) {
+                        fi[i] = evaluatex(e, { latex: true });
+                    } else {
+                        fi[i] = undefined;
+                    }
+                });
+            } catch (err) {
+                if (evaluatexErrorCodes.get(err)) {
+                    console.log(evaluatexErrorCodes.get(err));
+                } else {
+                    console.log(err);
+                }
+            }
         }
 
         return fi;
     }
 
-    const makeStep = (i: number, j: number, initials: [number, number], h: number, steps: Step[], method: string) => {
-        let initial = initials[i % 2];
-        let x = parseFloat((h * j).toFixed(3));
-        let y;
-        let f;
-        let prevStep = steps[j-1];
-        if (j === 0) {
-            y = initial;
-        } else if (method === "Euler") {
-            y = parseFloat((prevStep.y + h*prevStep.f[0]).toFixed(3));
-        } else {
-            let addedFs = 0;
-            prevStep.f.forEach((k, j) => { 
-                addedFs += j === 1 || j === 2 ? 2*k : k;
-            });
-            y = parseFloat((prevStep.y + (1/6) * h * addedFs).toFixed(3));
-        }
+    const makeStep = (i: number, initials: [number, number], h: number, steps: Step[], fi: EvalSet, mode: number) => {
+        let [x, y] = initials;
+        let t = h * i;
+        let fx = [];
+        let fy = [];
 
-        // Calculate f_i
-        try {
-            f = [fi[i % 2]({x: x, y: y, e: Math.E})];
-            if (method === "Runge-Kutta") {
-                for (let j = 0; j < 2; j++) {
-                    f.push(fi[i % 2]({x: x + h/2, y: y + f[j]/2, e: Math.E}));
+        if (i > 0) {
+            const oldStep = steps[i-1];
+            const oldX = oldStep.x;
+            const oldY = oldStep.y;
+            const oldT = oldStep.t;
+            fx = [h * fi[0]({ t: oldT, x: oldX, y: oldY, e: Math.E })];
+            fy = [h * fi[1]({ t: oldT, x: oldX, y: oldY, e: Math.E })];
+            if (mode === 0) {
+                x = oldX + fx[0];
+                y = oldY + fy[0];
+            } else {
+                // Runge-Kutta
+                let fxSum = fx[0]; // <--- Add the result of first computation at start.
+                let fySum = fy[0]; // <----┘
+                let inputT: number;
+                let inputX: number;
+                let inputY: number;
+                let newX: number;
+                let newY: number;
+                let before4: boolean;
+
+                for (let j = 1; j < 4; j++) {
+                    before4 = j < 3;
+
+                    if (before4) {
+                        inputT = oldT + h/2;
+                        inputX = oldX + (fx[j-1] / 2);
+                        inputY = oldY + (fy[j-1] / 2);
+                    } else {
+                        inputT = oldT + h;
+                        inputX = oldX + fx[j-1];
+                        inputY = oldY + fy[j-1];
+                    }
+
+                    console.log(j-1, fx[j-1], inputX, before4);
+
+                    newX = h * fi[0]({ t: inputT, x: inputX, y: inputY, e: Math.E});
+                    fx.push(newX);
+                    fxSum += before4 ? 2 * newX : newX;
+
+                    newY = h * fi[1]({ t: inputT, x: inputX, y: inputY, e: Math.E});
+                    fy.push(newY);
+                    fySum += before4 ? 2 * newY : newY;
                 }
-                f.push(fi[i % 2]({x: x + h, y: y + f[2], e: Math.E}));
+
+                x = oldX + 1/6 * (fxSum);
+                y = oldY + 1/6 * (fySum);
             }
-        } catch (err) {
-            console.log(err);
-            return undefined;
         }
 
-        return { x: x, y: y, f: f };
+        return { t: t, x: x, y: y, fx: fx, fy: fy };
     }
 
     // Generates a list of steps based on a certain requirement.
-    const generateSteps = (stepN: number, h: number, initials: [number, number], fi: EvalSet, method: string, i: number) => {
+    const generateSteps = (n: number, h: number, initials: [number, number], fi: EvalSet, mode: number) => {
         if (!fi[0]) return undefined;
-        let tainted = [false, false];
 
+        let tainted = false;
         let steps: Step[] = [];
         let newStep: Step;
 
-        // Calculate y_i for both functions
-        for (let j = 0; j <= stepN; j++) {
-            if (!tainted[j]) {
-                newStep = makeStep(i, j, initials, h, steps, method);
-                /* If computed y value exceeds biggest possible integers size
-                 * we will just stop the computation here and set the variable
-                 * that will show that fact on the list of values */
-                if (newStep.y >= Number.MAX_SAFE_INTEGER) {
-                    tainted[i] = true;
-                }
-                
-                // Create a new step with those values.
-                steps = [...steps, newStep];
+        for (let i = 0; i <= n; i++)
+        if (!tainted) {
+            newStep = makeStep(i, initials, h, steps, fi, mode);
+            /* If computed y value exceeds biggest possible integers size
+             * we will just stop the computation here and set the variable
+             * that will show that fact on the list of values */
+            if (newStep.y >= Number.MAX_SAFE_INTEGER || newStep.x >= Number.MAX_SAFE_INTEGER) {
+                tainted = true;
             }
+
+            // Create a new step with those values.
+            steps = [...steps, newStep];
         }
+
+        // Truncate decimal places down to three for viewing purposes.
+        steps.forEach((step, i) => {
+            Object.entries(step).forEach(ent => { 
+                let val = ent[1];
+                if (Array.isArray(val)) {
+                    val.forEach((v, j)  => {
+                        steps[i][ent[0]][j] = parseFloat(v.toFixed(3));
+                    });
+                } else {
+                    steps[i][ent[0]] = parseFloat(val.toFixed(3));
+                }
+            });
+        });
+
+        console.log(steps);
 
         return steps;
     }
 
-    /* Generate or retrieve the steps that
-     * are needed by certain UI elements */
-    const getNeeded = (needs: [string, string], steps: StepVals, stepN: number, h: number, initials: [number, number], fi: EvalSet, changed: boolean) => {
-        let combNumber = combinations.get(needs.join(""));
+const generateRequired = (form: FormT, fi: EvalSet, options: string[], requirements: string[] | string) => {
+     let generated;
+     let final;
 
-        /* If the combination has already been calculated
-         * just retrieve it. */
-        let needed = steps[combNumber];
-        if (needed.length && !changed) {
-            return needed;
-        }
-
-        /* Generate new steps for the required needs. */
-        let newSteps = generateSteps(stepN, h, initials, fi, needs[1], combNumber);
-        if (!newSteps) {
-            return [];
-        }
-
-        return newSteps;
-    }
-
-    const isInvalid = (f: FormT) => {
-        let invalid = false;
-        let vals = Object.values(f);
-        vals.forEach((v, i) => {
-            if ((i === 0 || i === vals.length-1) && (v[0] === NaN || v[0] === "")) {
-                invalid = true;
-            } else if (form.equations[1] && form.initials[1] === NaN) {
-                invalid = true;
+     if (isValid(form)) {
+        if (Array.isArray(requirements)) {
+            final = [];
+            requirements.forEach(req => {
+                const mode = options.indexOf(req) < 2 ? 0 : 1;
+                generated = generateSteps(form.n, form.h, form.init, fi, mode);
+                const isY = !!((options.indexOf(req) + 1) % 2);
+                if (isY) {
+                    final.push(generated.map(g => {
+                        return { t: g.t, y: g.y, ft: g.fy };
+                    }));
+                } else {
+                    final.push(generated.map(g => {
+                        return { t: g.t, y: g.x, ft: g.fx };
+                    }));
+                }
+            });
+        } else {
+            const mode = options.indexOf(requirements) < 2 ? 0 : 1;
+            generated = generateSteps(form.n, form.h, form.init, fi, mode);
+            const isY = !!(options.indexOf(requirements) % 2);
+            if (isY) {
+                final = generated.map(g => {
+                    return { t: g.t, y: g.y, ft: g.fy };
+                })
             } else {
-                if (v === NaN) {
-                    invalid = true;
-                }
-            }
-        });
-        return invalid;
-    }
-
-    // Helper function for array comparison
-    const arrEqual = (arr1, arr2) => {
-        let equal = true;
-        arr1.forEach((a, i) => equal = a === arr2[i]);
-
-        return equal;
-    }
-
-    // Object equality comparator (for checking if form changes).
-    const objEqual = (obj1: Object, obj2: Object) => {
-        if (!(obj1 && obj2)) return false;
-        let equal = true;
-        let obj1Vals = Object.values(obj1);
-        let obj2Vals = Object.values(obj2);
-        let v1, v2;
-        for (let i = 0; i < obj1Vals.length; i++) {
-            v1 = obj1Vals[i];
-            v2 = obj2Vals[i];
-
-            /* If both arrays contain false values,
-             * then they are cosidered as equal
-             * whether those falsy values are
-             * actually different in type. */
-            if (Array.isArray(v1)) {
-                if (!arrEqual(v1, v2)) {
-                    for (let j = 0; j < v1.length; j++) {
-                        if (v1[j] && v2[j]) return false;
-                    }
-                }
-            } else {
-                equal = v1 === v2;
-                if (!equal) {
-                    return false;
-                }
+                final = generated.map(g => {
+                    return { t: g.t, y: g.x, ft: g.fx };
+                })
             }
         }
+     }
 
-        return equal;
-    }
+     return final;
+}
 
     let langId = 0;
     let changeLang = () => {
@@ -180,72 +200,31 @@
     changeLang = changeLang.bind(this);
 
     let form: FormT = {
-        initials: [2, 5],
-        steps: 100,
-        stepSize: 0.01,
-        equations: ["3x+y", "x+3y"]
+        init: [2, 5],
+        n: 100,
+        h: 0.01,
+        eqs: ["3x+y", "x+3y"]
     }
 
-    /* This is used by getNeeded to compare if something changed
-     * in order to find out if steps need to be recomputed */
-    let oldForm: FormT;
-    let changed = true;
+    let listRequires = options[0];
+    let chartRequires: [string, string] = [options[0], options[1]];
 
-    const emptyNeed: [string, string] = ["Nothing", "Nothing"];
-    // 0: Chart (compare 1), 1: Chart (compare 2), 2: List
-    let needs: Needs[] = [["x(t)", "Euler"], emptyNeed, ["x(t)", "Euler"]];
-    let chartNeeds: ChartNeeds = needs.slice(0, 2) as ChartNeeds;
-    $: { chartNeeds.forEach((need, i) => needs[i] = need) };
     // Prepare the functions beforehand only once for all steps.
-    $: fi = prepareEvalFunc(form.equations);
-    let system = false;
-    $: {
-        if (!isInvalid(form)) {
-            system = !!form.equations[1].length;
-            changed = !objEqual(oldForm, form);
-            needs.forEach(n => {
-                if (!arrEqual(n, emptyNeed)) {
-                    steps.update(s => {
-                        let newSteps = getNeeded(n, $steps, form.steps, form.stepSize, form.initials, fi, changed);
-                        s[combinations.get(n.join(""))] = newSteps;
-                        return s;
-                    });
-                }
-            });
-            oldForm = JSON.parse(JSON.stringify(form));
-        }
-    }
-
-    // Set of two arrays as chart data;
-    let chartSet: StepVals = [[],[]];
-    $: {
-        let comboNumber = 0;
-        needs.slice(0, 2).forEach((n, i) => {
-            if (!arrEqual(n, emptyNeed)) {
-                comboNumber = combinations.get(n.join(""));
-                chartSet[i] = $steps[comboNumber];
-            } else {
-                chartSet[i] = [];
-            }
-        });
-    }
+    $: fi = prepareEvalFunc(form);
 </script>
 
 <main>
     <Header {changeLang} />
     <div>
         <Form bind:value={form} />
-        <Preview equations={form.equations} />
-        <Chart {system} stepSet={chartSet} bind:needs={chartNeeds} />
+        <Preview equations={form.eqs} />
+        <Chart steps={generateRequired(form, fi, options, chartRequires)} bind:requirements={chartRequires} />
         <List
-            equations={form.equations}
-            numberOfSteps={form.steps}
-            {system}
-            bind:needs={needs[2]}
-            steps={$steps[combinations.get(needs[2].join(""))]}
+            n={form.n}
+            steps={generateRequired(form, fi, options, listRequires)}
+            bind:requirement={listRequires}
         />
     </div>
-    <Info equations={form.equations} {system} />
 </main>
 
 <style>

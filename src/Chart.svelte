@@ -1,51 +1,63 @@
 <script lang="ts">
-    import type { ChartNeeds, StepVals } from "./types";
+    import type { Dataset, Step, ChartSteps } from "./types";
     import { onMount } from "svelte";
     import { Chart, registerables } from "../node_modules/chart.js";
     import { lang } from "./stores";
     import DropDown from "./DropDown.svelte";
+    import { options } from "./common";
 
-    export let system: boolean;
-    export let stepSet: StepVals;
-    export let needs: ChartNeeds;
-    
+    export let steps: ChartSteps;
+    export let requirements: [string, string] = [options[0], options[1]];
+
     Chart.register(...registerables);
 
     const deleteChart = (chart: Chart) => {
-        if (chart) chart.destroy();
+        if (chart) {
+            chart.destroy();
+            return 0;
+        }
+        return 1;
     }
 
-    const chartDataFields = (needs: ChartNeeds, datasets: StepVals) => {
+    const makeDataset = (steps: ChartSteps) => {
+        let dataset: Dataset = [[],[]];
+        steps.forEach((set, i) => {
+            set.forEach(s => {
+                dataset[i].push(s.y);
+            });
+        });
+        return dataset;
+    }
+
+    const makeLabels = (steps: ChartSteps) => {
+        return steps[0].map(s => s.t);
+    }
+
+    const chartDataFields = (dataset: Dataset, requirements: [string, string]) => {
         const colors = ["#51D4FF", "#FF7547"];
         const borders = ["#ADEBFF", "#faaa8e"]
-        let labels: string[] = [];
-        needs.forEach(n => labels.push(n.join(" ")));
+        let labels = requirements;
         let dataFields = [];
-        datasets.forEach((s, i) => {
-            if (s.length) {
-                dataFields.push({
-                    label: labels[i],
-                    data: s,
-                    backgroundColor: colors[i],
-                    borderColor: borders[i]
-                });
-            }
+        dataset.forEach((elem, i) => {
+           dataFields.push({
+               label: labels[i],
+               data: elem,
+               backgroundColor: colors[i],
+               borderColor: borders[i]
+           });
         });
 
         return dataFields;
     }
 
-    const createChart = (ctx: CanvasRenderingContext2D, chart: Chart, datasets: StepVals) => {
+    const createChart = (ctx: CanvasRenderingContext2D, chart: Chart, dataset: Dataset, labels: number[], requirements: [string, string]) => {
         if (!ctx) return undefined;
-        deleteChart(chart);
-        /* If one of the datasets is empty, choose another one
-         * to base the x-axis on. */
-        let axisDs = datasets[0].length ? datasets[0] : datasets[1];
+        if (chart) deleteChart(chart)
         return new Chart(ctx, {
             type: "line",
             data: {
-                labels: axisDs.map(vs => vs.x),
-                datasets: chartDataFields(needs, datasets)
+                labels: labels,
+                datasets: chartDataFields(dataset, requirements)
             },
             options: {
                 elements: {
@@ -61,67 +73,32 @@
         });
     }
 
-    /* Removes option selected in another dropdown to
-     * prevent selecting two same things at once. */
-    const removeSelected = (options: string[], otherSelection: string) => {
-        /* Deep copy because normally the base array
-         * would get modified by splice. */
+    const removeSelected = (options: string[], otherSelected: string) => {
         let optionsCopy = JSON.parse(JSON.stringify(options));
-        let index = options.indexOf(otherSelection);
-        if (index === -1) {
-            return options
-        };
-        optionsCopy.splice(index, 1);
+        optionsCopy.splice(options.indexOf(otherSelected), 1);
         return optionsCopy;
     }
 
-    let chart: Chart;
     let canvas: HTMLCanvasElement;
     let context: CanvasRenderingContext2D;
     onMount(() => context = canvas.getContext("2d"));
-    let datasets: StepVals;
-    $: {
-        // Reset the dataset before adding stuff to it.
-        datasets = [[],[]];
-        stepSet.forEach((s, i) => {
-            if (s.length) {
-                s.forEach(s => {
-                    datasets[i] = [...datasets[i], { x: s.x, y: s.y }];
-                });
-            }
-        })
-
-        chart = createChart(context, chart, datasets);
-    }
-
-    const allOptions = ["x(t) Euler", "y(t) Euler", "x(t) Runge-Kutta", "y(t) Runge-Kutta", "Nothing"];
-    $: options = system ? allOptions : [allOptions[0], allOptions[2], allOptions[4]];
-    const noNeed = "Nothing";
-    let selected = [allOptions[0], noNeed];
-    $: {    
-        let nextNeed;
-        selected.forEach((s, i) => {
-            nextNeed = s.split(" ");
-            if (s === noNeed) {
-                nextNeed = Array(2).fill(noNeed);
-            }
-            needs[i] = nextNeed;
-        });
-    };
+    $: dataset = makeDataset(steps);
+    $: labels = makeLabels(steps);
+    $: chart = createChart(context, chart, dataset, labels, requirements);
 </script>
 
 <div class="outer">
     <div class="dropdowns">
         <DropDown
-            label={$lang.comparisonDropdown1}
-            options={removeSelected(options, selected[1])}
-            bind:selected={selected[0]}
-        />
-        <DropDown
-            label={$lang.comparisonDropdown2}
-            options={removeSelected(options, selected[0])}
-            bind:selected={selected[1]}
-        />
+             label={$lang.comparisonDropdown1}
+             options={removeSelected(options, requirements[1])}
+             bind:selected={requirements[0]}
+             />
+             <DropDown
+             label={$lang.comparisonDropdown2}
+             options={removeSelected(options, requirements[0])}
+             bind:selected={requirements[1]}
+             />
     </div>
     <div class="chart-holder">
         <div class="chart">
