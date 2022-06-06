@@ -9,18 +9,31 @@
     import { lang } from "./stores";
     import Locale from "./locale";
     import { evaluatexErrorCodes, options } from "./common";
-    import Info from "./Info.svelte";
+    // import Info from "./Info.svelte";
+
+    const isEmpty = (arr: any[]) => {
+        let empty = false;
+        arr.forEach(e => {
+            if (!e) empty = true;
+        });
+
+        return empty;
+    }
+
+    /* Contains illegal characters in
+     * context of a differential equation */
+    // const containsForbidden = (eq: string) => {
+    //     return eq.includes() // TODO: Create a REGEX that will check for forbidden characters.
+    // }
 
     const isValid = (f: FormT) => {
         let valid = true;
         let vals = Object.values(f);
-        vals.forEach((v, i) => {
-            if ((i === 0 || i === vals.length-1) && (v[0] === NaN || v[0] === "")) {
-                valid = false;
-            } else if (form.eqs[1] && form.init[1] === NaN) {
-                valid = false;
+        vals.forEach(v => {
+            if (Array.isArray(v)) {
+                if (isEmpty(v)) valid = false;
             } else {
-                if (v === NaN) {
+                if (!v || v < 0) {
                     valid = false;
                 }
             }
@@ -29,13 +42,20 @@
         return valid;
     }
 
+    /* Translates the equation that uses the form "y(t) / x(t)"
+     * into something that is readable by evaluatex basically by
+     * removing the brackets from the equation */
+    const equationTranslator = (eq: string) => {
+        return eq.replaceAll("(t)", "");
+    }
+
     const prepareEvalFunc = (form: FormT) => {
         let fi = [undefined, undefined];
         if (isValid(form)) {
             try {
-                form.eqs.forEach((e, i) => {
-                    if (e) {
-                        fi[i] = evaluatex(e, { latex: true });
+                form.eqs.forEach((eq, i) => {
+                    if (eq) {
+                        fi[i] = evaluatex(equationTranslator(eq), { e: Math.E }, { latex: true });
                     } else {
                         fi[i] = undefined;
                     }
@@ -63,8 +83,8 @@
             const oldX = oldStep.x;
             const oldY = oldStep.y;
             const oldT = oldStep.t;
-            fx = [h * fi[0]({ t: oldT, x: oldX, y: oldY, e: Math.E })];
-            fy = [h * fi[1]({ t: oldT, x: oldX, y: oldY, e: Math.E })];
+            fx = [h * fi[0]({ t: oldT, x: oldX, y: oldY })];
+            fy = [h * fi[1]({ t: oldT, x: oldX, y: oldY })];
             if (mode === 0) {
                 x = oldX + fx[0];
                 y = oldY + fy[0];
@@ -92,18 +112,16 @@
                         inputY = oldY + fy[j-1];
                     }
 
-                    console.log(j-1, fx[j-1], inputX, before4);
-
-                    newX = h * fi[0]({ t: inputT, x: inputX, y: inputY, e: Math.E});
+                    newX = h * fi[0]({ t: inputT, x: inputX, y: inputY });
                     fx.push(newX);
                     fxSum += before4 ? 2 * newX : newX;
 
-                    newY = h * fi[1]({ t: inputT, x: inputX, y: inputY, e: Math.E});
+                    newY = h * fi[1]({ t: inputT, x: inputX, y: inputY });
                     fy.push(newY);
                     fySum += before4 ? 2 * newY : newY;
                 }
 
-                x = oldX + 1/6 * (fxSum);
+                x = oldX + 1/6 * (fxSum) ;
                 y = oldY + 1/6 * (fySum);
             }
         }
@@ -113,7 +131,7 @@
 
     // Generates a list of steps based on a certain requirement.
     const generateSteps = (n: number, h: number, initials: [number, number], fi: EvalSet, mode: number) => {
-        if (!fi[0]) return undefined;
+        if (!fi[0] || !fi[1]) return undefined;
 
         let tainted = false;
         let steps: Step[] = [];
@@ -147,8 +165,6 @@
             });
         });
 
-        console.log(steps);
-
         return steps;
     }
 
@@ -162,6 +178,7 @@ const generateRequired = (form: FormT, fi: EvalSet, options: string[], requireme
             requirements.forEach(req => {
                 const mode = options.indexOf(req) < 2 ? 0 : 1;
                 generated = generateSteps(form.n, form.h, form.init, fi, mode);
+                if (!generated) return undefined;
                 const isY = !!((options.indexOf(req) + 1) % 2);
                 if (isY) {
                     final.push(generated.map(g => {
@@ -173,9 +190,12 @@ const generateRequired = (form: FormT, fi: EvalSet, options: string[], requireme
                     }));
                 }
             });
+            // If there has been an error during computation...
+            if (!final[0]) return undefined;
         } else {
             const mode = options.indexOf(requirements) < 2 ? 0 : 1;
             generated = generateSteps(form.n, form.h, form.init, fi, mode);
+            if (!generated) return undefined;
             const isY = !!(options.indexOf(requirements) % 2);
             if (isY) {
                 final = generated.map(g => {
@@ -200,10 +220,10 @@ const generateRequired = (form: FormT, fi: EvalSet, options: string[], requireme
     changeLang = changeLang.bind(this);
 
     let form: FormT = {
+        eqs: ["3x(t)+y(t)", "x(t)+3y(t)"],
         init: [2, 5],
         n: 100,
-        h: 0.01,
-        eqs: ["3x+y", "x+3y"]
+        h: 0.01
     }
 
     let listRequires = options[0];

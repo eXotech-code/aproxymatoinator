@@ -9,6 +9,7 @@ const locale = {
     listDropdown: ["Pokaż", "Show"],
     comparisonDropdown1: ["Porównaj", "Compare"],
     comparisonDropdown2: ["Do", "To"],
+    noData: ["Brak danych do pokazania w obecnym czasie.", "No data to show at this time."],
     nothing: ["Nic", "nothing"],
     cardTitle: ["Krok", "Step"],
     moreButton: ["Pokaż więcej", "Show more"],
@@ -102,6 +103,7 @@ export class Locale {
     listDropdown: string;
     comparisonDropdown1: string;
     comparisonDropdown2: string;
+    noData: string;
     nothing: string;
     cardTitle: string;
     moreButton: string;

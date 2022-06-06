@@ -20,6 +20,7 @@
     }
 
     const makeDataset = (steps: ChartSteps) => {
+        if (!steps) return undefined;
         let dataset: Dataset = [[],[]];
         steps.forEach((set, i) => {
             set.forEach(s => {
@@ -30,6 +31,8 @@
     }
 
     const makeLabels = (steps: ChartSteps) => {
+        console.log(steps);
+        if (!steps) return undefined;
         return steps[0].map(s => s.t);
     }
 
@@ -53,6 +56,7 @@
     const createChart = (ctx: CanvasRenderingContext2D, chart: Chart, dataset: Dataset, labels: number[], requirements: [string, string]) => {
         if (!ctx) return undefined;
         if (chart) deleteChart(chart)
+        if (!dataset || !labels) return undefined;
         return new Chart(ctx, {
             type: "line",
             data: {
@@ -102,7 +106,10 @@
     </div>
     <div class="chart-holder">
         <div class="chart">
-            <canvas width=100 height=100 bind:this={canvas}></canvas>
+            {#if !steps}
+                <p>{$lang.noData}</p>
+            {/if}
+            <canvas class={steps ? "" : "hidden"} width=100 height=100 bind:this={canvas}></canvas>
         </div>
     </div>
 </div>
@@ -134,9 +141,18 @@
 
     .chart-holder > .chart {
         position: absolute;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1;
         top: 5%;
         left: 5%;
         bottom: 5%;
         right: 5%;
+    }
+
+    .hidden {
+        visibility: hidden;
     }
 </style>
